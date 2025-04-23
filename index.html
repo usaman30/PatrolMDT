@@ -2,18 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PatrolCAD v2.3 – Phase 2</title>
+  <title>PatrolCAD v2.3 – Full Simulation</title>
   <style>
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #1b1f23; color: #e0e0e0; }
     .hidden { display: none; }
-    .centered {
-      display: flex; flex-direction: column; justify-content: center;
-      align-items: center; height: 100vh; background-color: #121417;
-    }
-    .login-box {
-      background-color: #263238; padding: 30px; border-radius: 8px;
-      box-shadow: 0 0 20px #000;
-    }
+    .centered { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #121417; }
+    .login-box { background-color: #263238; padding: 30px; border-radius: 8px; box-shadow: 0 0 20px #000; }
     .login-box input, .login-box button {
       padding: 10px; margin: 8px 0; width: 100%;
       background: #1b1f23; color: white;
@@ -34,14 +28,26 @@
     .sidebar.show { left: 0; }
     .sidebar button { width: 100%; margin-bottom: 10px; }
     .menu-toggle { cursor: pointer; font-size: 18px; }
-    textarea, input { background: #121417; color: #fff; border: 1px solid #90caf9; border-radius: 4px; padding: 8px; margin-top: 5px; width: 100%; }
-    .section { background-color: #263238; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-    .output { background: #1e272e; padding: 10px; border: 1px solid #90caf9; border-radius: 4px; white-space: pre-wrap; }
-    .logo { height: 40px; }
+    input, textarea, select {
+      width: 100%; background-color: #121417;
+      border: 1px solid #90caf9; color: white;
+      padding: 8px; margin-top: 5px; margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    .section {
+      background-color: #263238; padding: 15px;
+      border-radius: 6px; margin-bottom: 15px;
+    }
+    .output {
+      white-space: pre-wrap; background-color: #1e272e;
+      padding: 10px; border: 1px solid #90caf9;
+      border-radius: 4px; margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="centered">
   <div class="login-box">
     <h2>PatrolCAD Access</h2>
@@ -52,50 +58,47 @@
   </div>
 </div>
 
+<!-- MAIN SYSTEM -->
 <div id="mainDashboard" class="hidden">
+  <!-- SIDEBAR MENU -->
   <div class="sidebar" id="sidebar">
     <button onclick="toggleSidebar()">Close Sidebar</button>
-    <button onclick="alert('Resources panel coming soon')">Resources</button>
-    <button onclick="alert('Settings panel coming soon')">Settings</button>
+    <button onclick="showPanel('resourcesPanel')">Resources</button>
+    <button onclick="showPanel('settingsPanel')">Settings</button>
     <button onclick="logout()">Logout</button>
   </div>
 
+  <!-- HEADER BAR -->
   <header>
-    <div>
-      <img src="your_logo_path_here.png" alt="PatrolCAD Logo" class="logo">
-    </div>
-    <span id="unitDisplay">Logged in</span>
+    <span id="unitDisplay">Unit ID</span>
     <span class="menu-toggle" onclick="toggleSidebar()">☰ Menu</span>
   </header>
 
   <div class="dashboard">
+  
+      <!-- CALL ASSIGNMENT -->
     <div class="section">
       <h3>Current Assignment</h3>
-      <div id="currentCall">No call assigned.</div>
+      <div id="currentCall">No active call.</div>
       <button onclick="clearCall()">Clear Call</button>
     </div>
 
     <div class="section">
-      <h3>Generate New Call</h3>
-      <button onclick="generateCall()">Dispatch Random Call</button>
+      <h3>Generate Call</h3>
+      <button onclick="generateCall()">New Random Call</button>
     </div>
 
     <div class="section">
-      <h3>Custom Call Creator</h3>
+      <h3>Custom Call Creation</h3>
       <input id="callTitle" placeholder="Call Title">
       <input id="callLocation" placeholder="Location">
       <input id="callPriority" placeholder="Priority (Level 1–3)">
       <input id="callRP" placeholder="Reporting Party">
-      <button onclick="submitCustomCall()">Submit Call</button>
-    </div>
-    
-        <div class="section">
-      <h3>Officer Notepad</h3>
-      <textarea id="notepad" rows="6" placeholder="Write notes here..."></textarea>
-      <button onclick="saveNotepad()">Save Notes</button>
-      <button onclick="clearNotepad()">Clear Notes</button>
+      <textarea id="callDescription" placeholder="Description of Situation..."></textarea>
+      <button onclick="submitCustomCall()">Submit Custom Call</button>
     </div>
 
+    <!-- NCIC Search -->
     <div class="section">
       <h3>NCIC Search</h3>
       <input id="ncicFirst" placeholder="First Name">
@@ -107,17 +110,99 @@
       <div id="ncicResult" class="output"></div>
     </div>
 
+    <!-- License Plate Search -->
     <div class="section">
       <h3>License Plate Search</h3>
       <input id="plateInput" placeholder="Plate Number, State">
       <button onclick="runPlateSearch()">Search Plate</button>
       <div id="plateResult" class="output"></div>
     </div>
-  </div>
-</div>
 
-<script>
+    <!-- Search History -->
+    <div class="section">
+      <h3>Search History</h3>
+      <button onclick="showHistory()">View History Log</button>
+      <div id="searchHistoryLog" class="output"></div>
+    </div>
+
+    <!-- Officer Notepad -->
+    <div class="section">
+      <h3>Officer Notepad</h3>
+      <textarea id="notepad" rows="6" placeholder="Write field notes here..."></textarea>
+      <button onclick="saveNotepad()">Save Notes</button>
+      <button onclick="clearNotepad()">Clear Notes</button>
+    </div>
+
+    <!-- Incident Report -->
+    <div class="section">
+      <h3>Incident Report</h3>
+      <input id="reportNum" placeholder="Case Number">
+      <input id="reportSubject" placeholder="Subject Name / Incident">
+      <textarea id="reportNarrative" rows="5" placeholder="Narrative..."></textarea>
+      <button onclick="submitIncidentReport()">Submit Report</button>
+      <div id="reportLog" class="output"></div>
+    </div>
+
+    <!-- Scenario Tools -->
+    <div class="section">
+      <h3>Scenario Loader</h3>
+      <select id="scenarioSelect">
+        <option value="none">Select Scenario</option>
+        <option value="edp">Mental Health Crisis</option>
+        <option value="pursuit">Vehicle Pursuit</option>
+        <option value="disturbance">Loud Disturbance</option>
+        <option value="audit">1st Amendment Audit</option>
+      </select>
+      <button onclick="loadScenario()">Load Scenario</button>
+      <div id="scenarioLog" class="output"></div>
+    </div>
+
+    <!-- Shift Summary -->
+    <div class="section">
+      <h3>Shift Summary</h3>
+      <button onclick="generateShiftSummary()">End Shift & View Summary</button>
+      <div id="summaryOutput" class="output"></div>
+    </div>
+
+    <!-- Quick Checks -->
+    <div class="section">
+      <h3>Quick Checks Panel</h3>
+      <button onclick="quickNCIC()">Random NCIC Hit</button>
+      <button onclick="quickPlate()">Random Plate Hit</button>
+      <div id="quickOutput" class="output"></div>
+    </div>
+
+    <!-- Broadcasts -->
+    <div class="section">
+      <h3>Dispatch Broadcasts</h3>
+      <button onclick="sendBroadcast('Code 33 – Emergency Traffic Only')">Code 33</button>
+      <button onclick="sendBroadcast('Officer Needs Assistance')">Assistance</button>
+      <button onclick="sendBroadcast('BOLO: Black SUV, Armed Suspect')">BOLO</button>
+      <div id="broadcastLog" class="output"></div>
+    </div>
+
+    <!-- Resources Panel -->
+    <div class="section hidden" id="resourcesPanel">
+      <h3>Resources</h3>
+      <ul>
+        <li><a href="#" style="color:#90caf9;">10-Codes PDF</a></li>
+        <li><a href="#" style="color:#90caf9;">Agency SOP Handbook</a></li>
+      </ul>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="section hidden" id="settingsPanel">
+      <h3>Settings</h3>
+      <button onclick="toggleNightMode()">Toggle Night Mode</button>
+      <p>Avatar: <input id="avatar" placeholder="Officer Avatar Name"></p>
+      <p>Patch: <input id="patch" placeholder="Department Patch Label"></p>
+    </div>
+    
+    <script>
 let isSupervisor = false;
+let searchHistory = [];
+let incidentReports = [];
+let shiftStats = { calls: 0, ncic: 0, plates: 0, citations: 0 };
 
 function login() {
   const name = document.getElementById("officerName").value;
@@ -145,7 +230,8 @@ function toggleSidebar() {
 }
 
 function logout() {
-  location.reload();
+  generateShiftSummary();
+  setTimeout(() => location.reload(), 8000);
 }
 
 function saveNotepad() {
@@ -160,32 +246,27 @@ function clearNotepad() {
 }
 
 function generateCall() {
-  const titles = ["Suspicious Person", "Disturbance", "DV Verbal", "Alarm", "Vehicle Stop"];
-  const locs = ["3201 Ridgeview Rd", "842 18th St", "1900 Blue Pkwy", "104 N Raytown Rd"];
-  const rps = ["Amy Walker", "Kevin Diaz", "Security", "Unknown"];
+  const titles = ["Suspicious Person", "DV Verbal", "Loud Disturbance", "Shoplifting", "Burglary"];
+  const locs = ["8321 Raytown Rd", "3201 NE 79th St", "104 Oakwood Dr", "2920 Bannister Rd"];
+  const rps = ["Amy Walker", "Kevin Diaz", "Security", "Caller Unknown"];
+  const descs = [
+    "Male pacing outside yelling at no one.",
+    "Neighbors report yelling and objects breaking.",
+    "RP states unknown vehicle has parked and engine running for 30 mins.",
+    "Alarm triggered, motion detected in rear office.",
+  ];
   const i = Math.floor(Math.random() * titles.length);
   const priority = `Level ${Math.ceil(Math.random() * 3)}`;
   const call = {
     title: titles[i],
     location: locs[i],
     priority: priority,
-    rp: rps[i]
+    rp: rps[i],
+    desc: descs[i] || "No further details."
   };
-  const output = `Title: ${call.title}\nLocation: ${call.location}\nPriority: ${call.priority}\nRP: ${call.rp}`;
-  document.getElementById("currentCall").innerText = output;
-  alert(`New Call Assigned:\n${output}`);
-}
-
-function clearCall() {
-  if (document.getElementById("currentCall").innerText === "No call assigned.") {
-    alert("No active call to clear.");
-    return;
-  }
-  const note = prompt("Enter disposition or call notes:");
-  if (note) {
-    alert("Call cleared with note: " + note);
-  }
-  document.getElementById("currentCall").innerText = "No call assigned.";
+  shiftStats.calls++;
+  document.getElementById("currentCall").innerText =
+    `Title: ${call.title}\nLocation: ${call.location}\nPriority: ${call.priority}\nRP: ${call.rp}\nDescription: ${call.desc}`;
 }
 
 function submitCustomCall() {
@@ -193,32 +274,106 @@ function submitCustomCall() {
   const loc = document.getElementById("callLocation").value;
   const pri = document.getElementById("callPriority").value;
   const rp = document.getElementById("callRP").value;
-  if (!title || !loc || !pri || !rp) return alert("Fill all fields.");
-  const summary = `Title: ${title}\nLocation: ${loc}\nPriority: ${pri}\nRP: ${rp}`;
-  document.getElementById("currentCall").innerText = summary;
-  alert("Custom call assigned.");
+  const desc = document.getElementById("callDescription").value;
+  if (!title || !loc || !pri || !rp || !desc) return alert("Fill all fields.");
+  shiftStats.calls++;
+  const output = `Title: ${title}\nLocation: ${loc}\nPriority: ${pri}\nRP: ${rp}\nDescription: ${desc}`;
+  document.getElementById("currentCall").innerText = output;
+  alert("Custom call submitted.");
+}
+
+function clearCall() {
+  const field = document.getElementById("currentCall");
+  if (field.innerText.includes("No active call")) return alert("No active call.");
+  const note = prompt("Enter disposition or clearance note:");
+  if (note) alert(`Call cleared: ${note}`);
+  field.innerText = "No active call.";
 }
 
 function runNCIC() {
   const first = document.getElementById("ncicFirst").value;
   const last = document.getElementById("ncicLast").value;
   const dob = document.getElementById("ncicDOB").value;
-  const dl = document.getElementById("ncicDL").value;
-  const ssn = document.getElementById("ncicSSN").value;
-  if (!first || !last || !dob) return alert("First, Last, and DOB are required.");
-  let hit = `Name: ${first} ${last}\nDOB: ${dob}\nDL#: ${dl || "N/A"}\nSSN: ${ssn || "N/A"}\n`;
-  hit += `Warrant: None\nPriors: Traffic Violation\nDL Status: Active\nNotes: None`;
-  document.getElementById("ncicResult").innerText = hit;
+  if (!first || !last || !dob) return alert("First, Last, and DOB required.");
+  shiftStats.ncic++;
+  const entry = `NCIC Search – ${first} ${last}, DOB: ${dob}`;
+  searchHistory.push(entry);
+  document.getElementById("ncicResult").innerText =
+    `Name: ${first} ${last}\nDOB: ${dob}\nDL Status: Active\nPriors: Traffic Stop, Warning\nNo Warrants.`;
 }
 
 function runPlateSearch() {
   const plate = document.getElementById("plateInput").value.trim();
-  if (!plate) return alert("Enter a plate number.");
-  let result = `Plate: ${plate}\nVehicle: Blue Ford Explorer\nOwner: L. Sanchez\nReg Status: Active\nInsurance: Valid`;
-  if (plate.toLowerCase().includes("stolen")) {
-    result += `\n**FLAG: STOLEN VEHICLE**`;
+  if (!plate) return alert("Enter plate.");
+  shiftStats.plates++;
+  const entry = `Plate Search – ${plate}`;
+  searchHistory.push(entry);
+  const stolen = plate.toLowerCase().includes("stolen");
+  const out = stolen
+    ? `**FLAGGED: STOLEN**\nPlate: ${plate}\nVehicle: Black Dodge Charger\nRO: Nathan Fields\nReg: Expired`
+    : `Plate: ${plate}\nVehicle: Silver Camry\nRO: L. Sanchez\nReg: Active`;
+  document.getElementById("plateResult").innerText = out;
+}
+
+function showHistory() {
+  document.getElementById("searchHistoryLog").innerText = searchHistory.join("\n\n");
+}
+
+function submitIncidentReport() {
+  const num = document.getElementById("reportNum").value;
+  const subject = document.getElementById("reportSubject").value;
+  const narrative = document.getElementById("reportNarrative").value;
+  if (!num || !subject || !narrative) return alert("Fill all fields.");
+  const report = `Case #: ${num}\nSubject: ${subject}\nNarrative:\n${narrative}`;
+  incidentReports.push(report);
+  document.getElementById("reportLog").innerText = report;
+}
+
+function loadScenario() {
+  const selected = document.getElementById("scenarioSelect").value;
+  const log = document.getElementById("scenarioLog");
+  if (selected === "edp") {
+    log.innerText = "RP states male yelling about demons near gas pumps.";
+  } else if (selected === "pursuit") {
+    log.innerText = "Units in pursuit, black SUV eastbound 435 from Stadium Dr.";
+  } else if (selected === "disturbance") {
+    log.innerText = "Caller reports large party, bottles being thrown.";
+  } else if (selected === "audit") {
+    log.innerText = "Individual filming outside precinct refusing to ID.";
+  } else {
+    log.innerText = "No scenario selected.";
   }
-  document.getElementById("plateResult").innerText = result;
+}
+
+function generateShiftSummary() {
+  const summary = `Shift Summary:\nCalls Handled: ${shiftStats.calls}\nNCIC Queries: ${shiftStats.ncic}\nPlates Run: ${shiftStats.plates}\nCitations: ${shiftStats.citations}`;
+  document.getElementById("summaryOutput").innerText = summary;
+}
+
+function quickNCIC() {
+  shiftStats.ncic++;
+  document.getElementById("quickOutput").innerText =
+    "NCIC HIT: John White, DL Revoked, Prior Arrests: Burglary, Resisting.";
+}
+
+function quickPlate() {
+  shiftStats.plates++;
+  document.getElementById("quickOutput").innerText =
+    "Plate HIT: STOLEN – Red Jeep Cherokee, last seen N. Oak Trafficway.";
+}
+
+function sendBroadcast(msg) {
+  document.getElementById("broadcastLog").innerText = msg;
+}
+
+function showPanel(id) {
+  document.getElementById("resourcesPanel").classList.add("hidden");
+  document.getElementById("settingsPanel").classList.add("hidden");
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function toggleNightMode() {
+  document.body.style.background = document.body.style.background === "#1b1f23" ? "#000" : "#1b1f23";
 }
 </script>
 
