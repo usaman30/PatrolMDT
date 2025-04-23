@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PatrolCAD v2.3 – Phase 1</title>
+  <title>PatrolCAD v2.3 – Phase 2</title>
   <style>
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #1b1f23; color: #e0e0e0; }
     .hidden { display: none; }
@@ -20,12 +20,16 @@
       border: 1px solid #90caf9; border-radius: 4px;
     }
     .login-box button { background-color: #0d47a1; }
-    header { background: #0d47a1; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    header {
+      background: #0d47a1; color: white; padding: 10px;
+      font-weight: bold; display: flex; justify-content: space-between; align-items: center;
+    }
     .dashboard { padding: 20px; }
     .sidebar {
-      position: fixed; left: -250px; top: 0; width: 250px;
+      position: fixed; left: -260px; top: 0; width: 250px;
       height: 100%; background-color: #263238; padding: 20px;
-      box-shadow: 2px 0 10px #000; transition: 0.3s;
+      box-shadow: 2px 0 10px #000; transition: left 0.3s ease;
+      z-index: 999;
     }
     .sidebar.show { left: 0; }
     .sidebar button { width: 100%; margin-bottom: 10px; }
@@ -33,6 +37,7 @@
     textarea, input { background: #121417; color: #fff; border: 1px solid #90caf9; border-radius: 4px; padding: 8px; margin-top: 5px; width: 100%; }
     .section { background-color: #263238; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
     .output { background: #1e272e; padding: 10px; border: 1px solid #90caf9; border-radius: 4px; white-space: pre-wrap; }
+    .logo { height: 40px; }
   </style>
 </head>
 <body>
@@ -50,17 +55,31 @@
 <div id="mainDashboard" class="hidden">
   <div class="sidebar" id="sidebar">
     <button onclick="toggleSidebar()">Close Sidebar</button>
-    <button onclick="alert('Resources coming soon')">Resources</button>
-    <button onclick="alert('Settings coming soon')">Settings</button>
+    <button onclick="alert('Resources panel coming soon')">Resources</button>
+    <button onclick="alert('Settings panel coming soon')">Settings</button>
     <button onclick="logout()">Logout</button>
   </div>
 
   <header>
+    <div>
+      <img src="your_logo_path_here.png" alt="PatrolCAD Logo" class="logo">
+    </div>
     <span id="unitDisplay">Logged in</span>
     <span class="menu-toggle" onclick="toggleSidebar()">☰ Menu</span>
   </header>
 
   <div class="dashboard">
+    <div class="section">
+      <h3>Current Assignment</h3>
+      <div id="currentCall">No call assigned.</div>
+      <button onclick="clearCall()">Clear Call</button>
+    </div>
+
+    <div class="section">
+      <h3>Generate New Call</h3>
+      <button onclick="generateCall()">Dispatch Random Call</button>
+    </div>
+
     <div class="section">
       <h3>Custom Call Creator</h3>
       <input id="callTitle" placeholder="Call Title">
@@ -69,8 +88,8 @@
       <input id="callRP" placeholder="Reporting Party">
       <button onclick="submitCustomCall()">Submit Call</button>
     </div>
-
-    <div class="section">
+    
+        <div class="section">
       <h3>Officer Notepad</h3>
       <textarea id="notepad" rows="6" placeholder="Write notes here..."></textarea>
       <button onclick="saveNotepad()">Save Notes</button>
@@ -84,65 +103,122 @@
       <input id="ncicDOB" placeholder="DOB (MM/DD/YYYY)">
       <input id="ncicDL" placeholder="DL# (optional)">
       <input id="ncicSSN" placeholder="SSN (optional)">
-      <button onclick="runNCIC()">Search</button>
+      <button onclick="runNCIC()">Search NCIC</button>
       <div id="ncicResult" class="output"></div>
+    </div>
+
+    <div class="section">
+      <h3>License Plate Search</h3>
+      <input id="plateInput" placeholder="Plate Number, State">
+      <button onclick="runPlateSearch()">Search Plate</button>
+      <div id="plateResult" class="output"></div>
     </div>
   </div>
 </div>
 
 <script>
 let isSupervisor = false;
+
 function login() {
   const name = document.getElementById("officerName").value;
   const callsign = document.getElementById("callsign").value;
   if (!name || !callsign) return alert("Please fill all fields.");
-  document.getElementById("loginScreen").classList.add("hidden");
-  document.getElementById("mainDashboard").classList.remove("hidden");
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainDashboard").style.display = "block";
   document.getElementById("unitDisplay").innerText = `${callsign} – ${name}`;
 }
+
 function promptSupervisor() {
   const code = prompt("Enter Supervisor Code:");
   if (code === "cadboss") {
     isSupervisor = true;
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("mainDashboard").classList.remove("hidden");
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainDashboard").style.display = "block";
     document.getElementById("unitDisplay").innerText = "Supervisor – Authorized";
   } else {
     alert("Access denied.");
   }
 }
+
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("show");
 }
+
 function logout() {
   location.reload();
 }
+
 function saveNotepad() {
   const text = document.getElementById("notepad").value;
   localStorage.setItem("patrolNotes", text);
   alert("Notes saved.");
 }
+
 function clearNotepad() {
   document.getElementById("notepad").value = "";
   localStorage.removeItem("patrolNotes");
 }
+
+function generateCall() {
+  const titles = ["Suspicious Person", "Disturbance", "DV Verbal", "Alarm", "Vehicle Stop"];
+  const locs = ["3201 Ridgeview Rd", "842 18th St", "1900 Blue Pkwy", "104 N Raytown Rd"];
+  const rps = ["Amy Walker", "Kevin Diaz", "Security", "Unknown"];
+  const i = Math.floor(Math.random() * titles.length);
+  const priority = `Level ${Math.ceil(Math.random() * 3)}`;
+  const call = {
+    title: titles[i],
+    location: locs[i],
+    priority: priority,
+    rp: rps[i]
+  };
+  const output = `Title: ${call.title}\nLocation: ${call.location}\nPriority: ${call.priority}\nRP: ${call.rp}`;
+  document.getElementById("currentCall").innerText = output;
+  alert(`New Call Assigned:\n${output}`);
+}
+
+function clearCall() {
+  if (document.getElementById("currentCall").innerText === "No call assigned.") {
+    alert("No active call to clear.");
+    return;
+  }
+  const note = prompt("Enter disposition or call notes:");
+  if (note) {
+    alert("Call cleared with note: " + note);
+  }
+  document.getElementById("currentCall").innerText = "No call assigned.";
+}
+
 function submitCustomCall() {
   const title = document.getElementById("callTitle").value;
   const loc = document.getElementById("callLocation").value;
   const pri = document.getElementById("callPriority").value;
   const rp = document.getElementById("callRP").value;
   if (!title || !loc || !pri || !rp) return alert("Fill all fields.");
-  alert(`Call Submitted:\n${title} @ ${loc} (Priority ${pri})\nRP: ${rp}`);
+  const summary = `Title: ${title}\nLocation: ${loc}\nPriority: ${pri}\nRP: ${rp}`;
+  document.getElementById("currentCall").innerText = summary;
+  alert("Custom call assigned.");
 }
+
 function runNCIC() {
   const first = document.getElementById("ncicFirst").value;
   const last = document.getElementById("ncicLast").value;
   const dob = document.getElementById("ncicDOB").value;
   const dl = document.getElementById("ncicDL").value;
   const ssn = document.getElementById("ncicSSN").value;
-  if (!first || !last || !dob) return alert("First, Last, and DOB required.");
-  const result = `Name: ${first} ${last}\nDOB: ${dob}\nDL#: ${dl || "N/A"}\nSSN: ${ssn || "N/A"}\n\nWarrant: None\nPriors: Disorderly Conduct\nDL Status: Active`;
-  document.getElementById("ncicResult").innerText = result;
+  if (!first || !last || !dob) return alert("First, Last, and DOB are required.");
+  let hit = `Name: ${first} ${last}\nDOB: ${dob}\nDL#: ${dl || "N/A"}\nSSN: ${ssn || "N/A"}\n`;
+  hit += `Warrant: None\nPriors: Traffic Violation\nDL Status: Active\nNotes: None`;
+  document.getElementById("ncicResult").innerText = hit;
+}
+
+function runPlateSearch() {
+  const plate = document.getElementById("plateInput").value.trim();
+  if (!plate) return alert("Enter a plate number.");
+  let result = `Plate: ${plate}\nVehicle: Blue Ford Explorer\nOwner: L. Sanchez\nReg Status: Active\nInsurance: Valid`;
+  if (plate.toLowerCase().includes("stolen")) {
+    result += `\n**FLAG: STOLEN VEHICLE**`;
+  }
+  document.getElementById("plateResult").innerText = result;
 }
 </script>
 
