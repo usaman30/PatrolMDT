@@ -118,7 +118,8 @@
     <h2>PatrolCAD Access</h2>
     <input type="text" id="officerName" placeholder="Officer Name">
     <input type="text" id="callsign" placeholder="Callsign (e.g. 204)">
-    <button onclick="login()">Login</button>
+    <button id="loginBtn">Login</
+    button>
   </div>
 </div>
 
@@ -187,6 +188,10 @@
 <audio id="alertSound" preload="auto">
   <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YYQAAAAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" type="audio/wav">
 </audio>
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("loginBtn").addEventListener("click", login);
+});
 
 <script>
 let citationCount = 1000;
