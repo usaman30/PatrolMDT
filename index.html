@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PatrolCAD v2 – Tactical Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>PatrolCAD v2.1 – Tactical Dashboard</title>
   <style>
     body {
       margin: 0;
@@ -85,7 +85,7 @@
     .hidden {
       display: none;
     }
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       margin-top: 5px;
       margin-bottom: 10px;
@@ -94,6 +94,20 @@
       border: 1px solid #90caf9;
       color: white;
       border-radius: 4px;
+    }
+    .log-terminal {
+      background: #121417;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.9em;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+    }
+    .flag {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -110,22 +124,34 @@
 
 <div id="mainDashboard" class="hidden">
   <header>
-    PatrolCAD v2 – <span id="unitDisplay"></span>
+    PatrolCAD v2.1 – <span id="unitDisplay"></span>
   </header>
   <div class="dashboard">
     <div class="button-bar">
+      <select id="statusSelector" onchange="updateStatus()">
+        <option value="10-8">10-8 (Available)</option>
+        <option value="10-76">10-76 (En Route)</option>
+        <option value="10-23">10-23 (On Scene)</option>
+        <option value="10-6">10-6 (Busy)</option>
+        <option value="10-7">10-7 (Off Duty)</option>
+      </select>
       <button onclick="toggleSection('ncicSection')">NCIC Search</button>
       <button onclick="toggleSection('plateSection')">LP Search</button>
       <button onclick="toggleSection('citationSection')">Write Citation</button>
       <button onclick="generateCall()">Generate Call</button>
     </div>
 
-    <div id="assignment" class="section">
+    <div class="section">
+      <h3>Status & Log</h3>
+      <div id="dispatchLog" class="log-terminal"></div>
+    </div>
+
+    <div class="section">
       <h3>Current Assignment</h3>
       <div id="currentCall">No current assignment.</div>
     </div>
 
-    <div id="activeCalls" class="section">
+    <div class="section">
       <h3>Active Calls</h3>
       <div id="activeCallList"></div>
     </div>
@@ -165,6 +191,7 @@
 <script>
 let citationCount = 1000;
 let currentOfficer = '';
+let log = [];
 
 function login() {
   const name = document.getElementById("officerName").value;
@@ -172,82 +199,4 @@ function login() {
   if (name && callsign) {
     currentOfficer = `Unit ${callsign} – ${name}`;
     document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("mainDashboard").classList.remove("hidden");
-    document.getElementById("unitDisplay").textContent = currentOfficer;
-  }
-}
-
-function toggleSection(id) {
-  const section = document.getElementById(id);
-  section.classList.toggle("hidden");
-}
-
-function generateCall() {
-  const callID = Math.floor(1000 + Math.random() * 9000);
-  const priorities = ["Level 1 – Urgent", "Level 2 – Semi-Urgent", "Level 3 – Low Urgency"];
-  const locations = ["4830 E Bannister Rd, Kansas City, MO", "9207 Raytown Rd, Raytown, MO", "302 N River Blvd, Independence, MO"];
-  const rps = ["Amber Hicks", "Kevin Thomas", "Officer Report"];
-  const descs = ["Gunshots behind Grand Market.", "Suspicious person pacing outside QuickTrip.", "Loud music complaint, verbal disturbance."];
-
-  const i = Math.floor(Math.random() * priorities.length);
-  const call = {
-    id: callID,
-    title: descs[i].split('.')[0],
-    priority: priorities[i],
-    location: locations[i],
-    rp: rps[i],
-    description: descs[i],
-    units: ["204"],
-    timestamp: new Date().toLocaleTimeString()
-  };
-
-  document.getElementById("currentCall").innerText =
-    `Call ID: ${call.id}\nTitle: ${call.title}\nPriority: ${call.priority}\nLocation: ${call.location}\nRP: ${call.rp}\nDetails: ${call.description}`;
-
-  const callDiv = document.createElement("div");
-  callDiv.className = "output";
-  callDiv.innerText =
-    `Call ID: ${call.id}\nTitle: ${call.title}\nPriority: ${call.priority}\nUnits: ${call.units.join(', ')}\n[${call.timestamp}]`;
-
-  document.getElementById("activeCallList").appendChild(callDiv);
-  document.getElementById("alertSound").play();
-  setTimeout(() => callDiv.remove(), 180000);
-}
-
-function searchNCIC() {
-  const val = document.getElementById("ncicInput").value;
-  document.getElementById("ncicResult").innerText = `Search results for: ${val}\n(No matching records found in system)`;
-}
-
-function searchPlate() {
-  const val = document.getElementById("plateInput").value;
-  document.getElementById("plateResult").innerText = `Plate search: ${val}\n(No hits or alerts returned)`;
-}
-
-function generateCitation() {
-  const name = document.getElementById("violatorName").value;
-  const dob = document.getElementById("violatorDOB").value;
-  const vio = document.getElementById("violation").value;
-  const loc = document.getElementById("location").value;
-  const fine = document.getElementById("fine").value;
-  const notes = document.getElementById("notes").value;
-
-  if (!name || !vio || !loc) return alert("Missing required fields");
-
-  citationCount++;
-  const time = new Date().toLocaleString();
-  const entry =
-    `Citation #${citationCount}\nOfficer: ${currentOfficer}\nDate: ${time}\nViolator: ${name} – DOB: ${dob}\nViolation: ${vio}\nLocation: ${loc}\nFine: $${fine}\nNotes: ${notes}\n\n`;
-
-  document.getElementById("citationLog").innerText += entry;
-
-  document.getElementById("violatorName").value = '';
-  document.getElementById("violatorDOB").value = '';
-  document.getElementById("violation").value = '';
-  document.getElementById("location").value = '';
-  document.getElementById("fine").value = '';
-  document.getElementById("notes").value = '';
-}
-</script>
-</body>
-</html>
+    document
