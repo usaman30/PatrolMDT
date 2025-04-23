@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PatrolCAD – Unit Access</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1b1f23;
+      color: #e0e0e0;
+    }
+    .centered {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #121417;
+    }
+    .login-box {
+      background-color: #263238;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px #000;
+    }
+    .login-box input {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+      background: #1b1f23;
+      color: white;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+    }
+    .login-box button {
+      padding: 10px;
+      width: 100%;
+      background-color: #0d47a1;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    header {
+      background-color: #0d47a1;
+      padding: 10px;
+      text-align: center;
+      font-size: 1.3em;
+      color: white;
+      font-weight: bold;
+    }
+    .dashboard {
+      padding: 20px;
+    }
+    .button-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 10px;
+      background-color: #1565c0;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .section {
+      background-color: #263238;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    .output {
+      white-space: pre-wrap;
+      background-color: #1e272e;
+      padding: 10px;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="centered">
+  <div class="login-box">
+    <h2>PatrolCAD Access</h2>
+    <input type="text" id="officerName" placeholder="Officer Name">
+    <input type="text" id="callsign" placeholder="Callsign (e.g. 204)">
+    <button onclick="login()">Login</button>
+  </div>
+</div>
+
+<div id="mainDashboard" class="hidden">
+  <header>
+    PatrolCAD – <span id="unitDisplay"></span>
+  </header>
+  <div class="dashboard">
+    <div class="button-bar">
+      <button onclick="toggleSection('ncicSection')">NCIC Search</button>
+      <button onclick="toggleSection('plateSection')">LP Search</button>
+      <button onclick="generateCall()">Generate Call</button>
+    </div>
+
+    <div id="assignment" class="section">
+      <h3>Current Assignment</h3>
+      <div id="currentCall">No current assignment.</div>
+    </div>
+
+    <div id="activeCalls" class="section">
+      <h3>Active Calls</h3>
+      <div id="activeCallList"></div>
+    </div>
+
+    <div id="ncicSection" class="section hidden">
+      <h3>NCIC Search</h3>
+      <input type="text" placeholder="Last, First, M., DOB" style="width:100%">
+    </div>
+
+    <div id="plateSection" class="section hidden">
+      <h3>License Plate Search</h3>
+      <input type="text" placeholder="Plate Number, State" style="width:100%">
+    </div>
+  </div>
+</div>
+
+<audio id="alertSound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YYQAAAAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" type="audio/wav">
+</audio>
+
+<script>
+function login() {
+  const name = document.getElementById("officerName").value;
+  const callsign = document.getElementById("callsign").value;
+  if (name && callsign) {
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("mainDashboard").classList.remove("hidden");
+    document.getElementById("unitDisplay").textContent = `Unit ${callsign} – ${name}`;
+  }
+}
+
+function toggleSection(id) {
+  const section = document.getElementById(id);
+  section.classList.toggle("hidden");
+}
+
+function generateCall() {
+  const callID = Math.floor(1000 + Math.random() * 9000);
+  const priorities = ["Level 1 – Urgent", "Level 2 – Semi-Urgent", "Level 3 – Low Urgency"];
+  const locations = ["4830 E Bannister Rd, Kansas City, MO", "9207 Raytown Rd, Raytown, MO", "302 N River Blvd, Independence, MO"];
+  const rps = ["Amber Hicks", "Kevin Thomas", "Officer Report"];
+  const descs = ["Gunshots behind Grand Market.", "Suspicious person pacing outside QuickTrip.", "Loud music complaint, verbal disturbance."];
+
+  const i = Math.floor(Math.random() * priorities.length);
+
+  const call = {
+    id: callID,
+    title: descs[i].split('.')[0],
+    priority: priorities[i],
+    location: locations[i],
+    rp: rps[i],
+    description: descs[i],
+    units: ["204"],
+    timestamp: new Date().toLocaleTimeString()
+  };
+
+  document.getElementById("currentCall").innerText =
+    `Call ID: ${call.id}\nTitle: ${call.title}\nPriority: ${call.priority}\nLocation: ${call.location}\nRP: ${call.rp}\nDetails: ${call.description}`;
+
+  const callDiv = document.createElement("div");
+  callDiv.className = "output";
+  callDiv.innerText =
+    `Call ID: ${call.id}\nTitle: ${call.title}\nPriority: ${call.priority}\nUnits: ${call.units.join(', ')}\n[${call.timestamp}]`;
+
+  document.getElementById("activeCallList").appendChild(callDiv);
+
+  document.getElementById("alertSound").play();
+
+  // Auto expire call after 3 minutes
+  setTimeout(() => {
+    callDiv.remove();
+  }, 180000);
+}
+</script>
+</body>
+</html>
