@@ -1,8 +1,8 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PatrolCAD v2.1 – Full System</title>
+  <title>PatrolCAD v2.2 – Full System</title>
   <style>
     body {
       margin: 0;
@@ -90,6 +90,10 @@
       border: 1px solid #90caf9;
       border-radius: 4px;
     }
+    .flag {
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -124,6 +128,7 @@
       <button onclick="toggleSection('plateSection')">Plate Search</button>
       <button onclick="toggleSection('citationSection')">Write Citation</button>
       <button onclick="generateCall()">Generate Call</button>
+      <button onclick="clearCall()">Clear Call</button>
     </div>
 
     <div class="section">
@@ -141,8 +146,7 @@
       <div id="activeCallList"></div>
     </div>
     
-
-    <div id="ncicSection" class="section hidden">
+        <div id="ncicSection" class="section hidden">
       <h3>NCIC Search</h3>
       <input type="text" id="ncicInput" placeholder="Last, First, M., DOB">
       <button onclick="searchNCIC()">Search</button>
@@ -169,6 +173,10 @@
     </div>
   </div>
 </div>
+
+<audio id="alertSound" preload="auto">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
 <script>
 let currentOfficer = '';
@@ -212,80 +220,52 @@ function toggleSection(id) {
 function addLog(entry) {
   const time = new Date().toLocaleTimeString();
   log.push(`[${time}] ${entry}`);
-  document.getElementById("dispatchLog").innerText = log.slice(-50).join("\\n");
+  const logBox = document.getElementById("dispatchLog");
+  logBox.innerText = log.slice(-50).join("\n");
+  logBox.scrollTop = logBox.scrollHeight;
 }
 
 function generateCall() {
   const callID = Math.floor(1000 + Math.random() * 9000);
-  const types = ["Burglary", "Suspicious Person", "Loud Disturbance"];
-  const places = ["4830 E Bannister Rd", "9207 Raytown Rd", "302 N River Blvd"];
-  const rps = ["Amber Hicks", "Kevin Thomas", "Officer Report"];
-  const levels = ["Level 1 – Urgent", "Level 2 – Semi-Urgent", "Level 3 – Low Urgency"];
-  const i = Math.floor(Math.random() * types.length);
+  const type = ["Burglary", "DV Verbal", "Suspicious Person", "Disturbance"][Math.floor(Math.random() * 4)];
+  const location = ["302 S Main St", "119 E 17th Ave", "4321 Raytown Rd", "839 Oak Tree Ln"][Math.floor(Math.random() * 4)];
+  const priority = ["Level 1 – Urgent", "Level 2 – Semi-Urgent", "Level 3 – Low Urgency"][Math.floor(Math.random() * 3)];
+  const rp = ["Kevin Jackson", "Maria Reed", "Neighbor", "Anonymous"][Math.floor(Math.random() * 4)];
+  const time = new Date().toLocaleTimeString();
+
   const call = {
     id: callID,
-    type: types[i],
-    location: places[i],
-    rp: rps[i],
-    priority: levels[i],
-    timestamp: new Date().toLocaleTimeString()
+    title: type,
+    location: location,
+    priority: priority,
+    rp: rp,
+    time: time
   };
+
   document.getElementById("currentCall").innerText =
-    `Call ID: ${call.id}\nTitle: ${call.type}\nPriority: ${call.priority}\nLocation: ${call.location}\nRP: ${call.rp}\nTime: ${call.timestamp}`;
+    `Call ID: ${call.id}\nTitle: ${call.title}\nPriority: ${call.priority}\nLocation: ${call.location}\nRP: ${call.rp}\nTime: ${call.time}`;
+
   const callDiv = document.createElement("div");
   callDiv.className = "output";
-  callDiv.innerText = `Call ID: ${call.id}\n${call.type} at ${call.location}\nUnits: 204\n[${call.timestamp}]`;
+  callDiv.innerText = `Call ID: ${call.id}\n${call.title} at ${call.location}\nUnits: 204\nTime: ${call.time}`;
   document.getElementById("activeCallList").appendChild(callDiv);
+
+  document.getElementById("alertSound").play();
   addLog(`${currentOfficer} assigned to call ${call.id}`);
+
   setTimeout(() => callDiv.remove(), 180000);
+}
+
+function clearCall() {
+  const display = document.getElementById("currentCall");
+  if (display.innerText.includes("Call ID")) {
+    addLog(`${currentOfficer} cleared their call`);
+    display.innerText = "No current assignment.";
+  } else {
+    alert("No active call to clear.");
+  }
 }
 
 function searchNCIC() {
   const val = document.getElementById("ncicInput").value.trim();
-  let result = `Search results for: ${val}\n\n`;
-  if (val.toLowerCase().includes("sherman")) {
-    result += "**FELONY WARRANT – EXTRADITABLE**\nDL Status: Revoked\nPriors: Assault, Trespassing";
-    addLog(`${currentOfficer} ran NCIC – HIT on "${val}"`);
-  } else {
-    const randomDL = ["Active", "Suspended", "Revoked"][Math.floor(Math.random() * 3)];
-    result += `DL Status: ${randomDL}\nNo warrants found\nPrior: Curfew Violation`;
-    addLog(`${currentOfficer} ran NCIC on "${val}"`);
-  }
-  document.getElementById("ncicResult").innerText = result;
-}
-
-function searchPlate() {
-  const val = document.getElementById("plateInput").value.trim();
-  let result = `Plate search: ${val}\n\n`;
-  if (val.toLowerCase().includes("8b2 x76")) {
-    result += "2013 Dodge Charger\nRO: Nathan Fields\nReg Status: Expired\n**STOLEN VEHICLE FLAG**";
-    addLog(`${currentOfficer} ran plate – STOLEN HIT on "${val}"`);
-  } else {
-    const cars = ["Silver Honda Accord", "Blue Ford Explorer", "Black Chevy Malibu"];
-    result += `Vehicle: ${cars[Math.floor(Math.random() * cars.length)]}\nRO: L. Sanchez\nReg Status: Active`;
-    addLog(`${currentOfficer} ran plate check: ${val}`);
-  }
-  document.getElementById("plateResult").innerText = result;
-}
-
-function generateCitation() {
-  const name = document.getElementById("violatorName").value;
-  const dob = document.getElementById("violatorDOB").value;
-  const vio = document.getElementById("violation").value;
-  const loc = document.getElementById("location").value;
-  const fine = document.getElementById("fine").value;
-  const notes = document.getElementById("notes").value;
-  if (!name || !vio || !loc) return alert("Missing required fields");
-  citationCount++;
-  const time = new Date().toLocaleString();
-  const entry =
-    `Citation #${citationCount}\nOfficer: ${currentOfficer}\nDate: ${time}\nViolator: ${name} – DOB: ${dob}\nViolation: ${vio}\nLocation: ${loc}\nFine: $${fine}\nNotes: ${notes}\n\n`;
-  document.getElementById("citationLog").innerText += entry;
-  addLog(`Citation #${citationCount} issued to ${name}`);
-  ['violatorName', 'violatorDOB', 'violation', 'location', 'fine', 'notes'].forEach(id => document.getElementById(id).value = '');
-}
-</script>
-
-</body>
-</html>
-
+  let result = `Search results
