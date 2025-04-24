@@ -2,12 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PatrolCAD v2.3 – Full Simulation</title>
+  <title>PatrolCAD v2.3 – Enhanced</title>
   <style>
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #1b1f23; color: #e0e0e0; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #1b1f23;
+      color: #e0e0e0;
+    }
     .hidden { display: none; }
-    .centered { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #121417; }
-    .login-box { background-color: #263238; padding: 30px; border-radius: 8px; box-shadow: 0 0 20px #000; }
+    .centered {
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      height: 100vh; background-color: #121417;
+    }
+    .login-box {
+      background-color: #263238;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px #000;
+    }
     .login-box input, .login-box button {
       padding: 10px; margin: 8px 0; width: 100%;
       background: #1b1f23; color: white;
@@ -16,17 +30,20 @@
     .login-box button { background-color: #0d47a1; }
     header {
       background: #0d47a1; color: white; padding: 10px;
-      font-weight: bold; display: flex; justify-content: space-between; align-items: center;
+      font-weight: bold; display: flex;
+      justify-content: space-between; align-items: center;
     }
     .dashboard { padding: 20px; }
     .sidebar {
       position: fixed; left: -260px; top: 0; width: 250px;
-      height: 100%; background-color: #263238; padding: 20px;
-      box-shadow: 2px 0 10px #000; transition: left 0.3s ease;
-      z-index: 999;
+      height: 100%; background-color: #263238;
+      padding: 20px; box-shadow: 2px 0 10px #000;
+      transition: left 0.3s ease; z-index: 999;
     }
     .sidebar.show { left: 0; }
-    .sidebar button { width: 100%; margin-bottom: 10px; }
+    .sidebar button {
+      width: 100%; margin-bottom: 10px;
+    }
     .menu-toggle { cursor: pointer; font-size: 18px; }
     input, textarea, select {
       width: 100%; background-color: #121417;
@@ -35,22 +52,51 @@
       border-radius: 4px;
     }
     .section {
-      background-color: #263238; padding: 15px;
-      border-radius: 6px; margin-bottom: 15px;
+      background-color: #263238;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
     }
     .output {
-      white-space: pre-wrap; background-color: #1e272e;
-      padding: 10px; border: 1px solid #90caf9;
-      border-radius: 4px; margin-top: 10px;
+      white-space: pre-wrap;
+      background-color: #1e272e;
+      padding: 10px;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #263238;
+      padding: 20px;
+      z-index: 1001;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 10px;
+      border: 2px solid #90caf9;
+      display: none;
+    }
+    .modal h3 {
+      margin-top: 0;
+    }
+    .modal .close-btn {
+      float: right;
+      background: transparent;
+      color: #fff;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="loginScreen" class="centered">
   <div class="login-box">
-    <h2>PatrolCAD Access</h2>
+    <h2>PatrolCAD Login</h2>
     <input type="text" id="officerName" placeholder="Officer Name">
     <input type="text" id="callsign" placeholder="Callsign (e.g. 204)">
     <button onclick="login()">Login</button>
@@ -58,47 +104,50 @@
   </div>
 </div>
 
-<!-- MAIN SYSTEM -->
+<!-- DASHBOARD -->
 <div id="mainDashboard" class="hidden">
-  <!-- SIDEBAR MENU -->
+  <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <button onclick="toggleSidebar()">Close Sidebar</button>
-    <button onclick="showPanel('resourcesPanel')">Resources</button>
-    <button onclick="showPanel('settingsPanel')">Settings</button>
+    <button onclick="showModal('resourcesModal')">Resources</button>
+    <button onclick="showModal('settingsModal')">Settings</button>
     <button onclick="logout()">Logout</button>
   </div>
 
-  <!-- HEADER BAR -->
+  <!-- HEADER -->
   <header>
     <span id="unitDisplay">Unit ID</span>
     <span class="menu-toggle" onclick="toggleSidebar()">☰ Menu</span>
   </header>
 
   <div class="dashboard">
-  
-      <!-- CALL ASSIGNMENT -->
-    <div class="section">
+
+    <!-- CALL TOOLS TOP ROW -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
       <h3>Current Assignment</h3>
+      <div>
+        <button onclick="generateCall()">New Random Call</button>
+        <button onclick="showCustomCall()">Custom Call</button>
+      </div>
+    </div>
+    <div class="section" style="min-height: 120px;">
       <div id="currentCall">No active call.</div>
       <button onclick="clearCall()">Clear Call</button>
     </div>
 
-    <div class="section">
-      <h3>Generate Call</h3>
-      <button onclick="generateCall()">New Random Call</button>
-    </div>
-
-    <div class="section">
-      <h3>Custom Call Creation</h3>
+    <!-- CUSTOM CALL FORM (popup style) -->
+    <div class="modal" id="customCallModal">
+      <button class="close-btn" onclick="hideModal('customCallModal')">×</button>
+      <h3>Create Custom Call</h3>
       <input id="callTitle" placeholder="Call Title">
       <input id="callLocation" placeholder="Location">
       <input id="callPriority" placeholder="Priority (Level 1–3)">
       <input id="callRP" placeholder="Reporting Party">
       <textarea id="callDescription" placeholder="Description of Situation..."></textarea>
-      <button onclick="submitCustomCall()">Submit Custom Call</button>
+      <button onclick="submitCustomCall()">Submit Call</button>
     </div>
 
-    <!-- NCIC Search -->
+    <!-- NCIC SEARCH -->
     <div class="section">
       <h3>NCIC Search</h3>
       <input id="ncicFirst" placeholder="First Name">
@@ -107,10 +156,20 @@
       <input id="ncicDL" placeholder="DL# (optional)">
       <input id="ncicSSN" placeholder="SSN (optional)">
       <button onclick="runNCIC()">Search NCIC</button>
-      <div id="ncicResult" class="output"></div>
+
+      <!-- TABBED RESULT VIEW -->
+      <div style="margin-top: 10px;">
+        <button onclick="showTab('identityTab')">Identity Info</button>
+        <button onclick="showTab('priorsTab')">Priors</button>
+        <button onclick="showTab('warrantsTab')">Warrants</button>
+      </div>
+
+      <div id="identityTab" class="output"></div>
+      <div id="priorsTab" class="output hidden"></div>
+      <div id="warrantsTab" class="output hidden"></div>
     </div>
 
-    <!-- License Plate Search -->
+    <!-- LICENSE PLATE SEARCH -->
     <div class="section">
       <h3>License Plate Search</h3>
       <input id="plateInput" placeholder="Plate Number, State">
@@ -118,91 +177,27 @@
       <div id="plateResult" class="output"></div>
     </div>
 
-    <!-- Search History -->
-    <div class="section">
-      <h3>Search History</h3>
-      <button onclick="showHistory()">View History Log</button>
-      <div id="searchHistoryLog" class="output"></div>
-    </div>
-
-    <!-- Officer Notepad -->
-    <div class="section">
-      <h3>Officer Notepad</h3>
-      <textarea id="notepad" rows="6" placeholder="Write field notes here..."></textarea>
-      <button onclick="saveNotepad()">Save Notes</button>
-      <button onclick="clearNotepad()">Clear Notes</button>
-    </div>
-
-    <!-- Incident Report -->
-    <div class="section">
-      <h3>Incident Report</h3>
-      <input id="reportNum" placeholder="Case Number">
-      <input id="reportSubject" placeholder="Subject Name / Incident">
-      <textarea id="reportNarrative" rows="5" placeholder="Narrative..."></textarea>
-      <button onclick="submitIncidentReport()">Submit Report</button>
-      <div id="reportLog" class="output"></div>
-    </div>
-
-    <!-- Scenario Tools -->
-    <div class="section">
-      <h3>Scenario Loader</h3>
-      <select id="scenarioSelect">
-        <option value="none">Select Scenario</option>
-        <option value="edp">Mental Health Crisis</option>
-        <option value="pursuit">Vehicle Pursuit</option>
-        <option value="disturbance">Loud Disturbance</option>
-        <option value="audit">1st Amendment Audit</option>
-      </select>
-      <button onclick="loadScenario()">Load Scenario</button>
-      <div id="scenarioLog" class="output"></div>
-    </div>
-
-    <!-- Shift Summary -->
-    <div class="section">
-      <h3>Shift Summary</h3>
-      <button onclick="generateShiftSummary()">End Shift & View Summary</button>
-      <div id="summaryOutput" class="output"></div>
-    </div>
-
-    <!-- Quick Checks -->
-    <div class="section">
-      <h3>Quick Checks Panel</h3>
-      <button onclick="quickNCIC()">Random NCIC Hit</button>
-      <button onclick="quickPlate()">Random Plate Hit</button>
-      <div id="quickOutput" class="output"></div>
-    </div>
-
-    <!-- Broadcasts -->
-    <div class="section">
-      <h3>Dispatch Broadcasts</h3>
-      <button onclick="sendBroadcast('Code 33 – Emergency Traffic Only')">Code 33</button>
-      <button onclick="sendBroadcast('Officer Needs Assistance')">Assistance</button>
-      <button onclick="sendBroadcast('BOLO: Black SUV, Armed Suspect')">BOLO</button>
-      <div id="broadcastLog" class="output"></div>
-    </div>
-
-    <!-- Resources Panel -->
-    <div class="section hidden" id="resourcesPanel">
-      <h3>Resources</h3>
-      <ul>
-        <li><a href="#" style="color:#90caf9;">10-Codes PDF</a></li>
-        <li><a href="#" style="color:#90caf9;">Agency SOP Handbook</a></li>
-      </ul>
-    </div>
-
-    <!-- Settings Panel -->
-    <div class="section hidden" id="settingsPanel">
+    <!-- MODALS FOR SETTINGS & RESOURCES -->
+    <div class="modal" id="settingsModal">
+      <button class="close-btn" onclick="hideModal('settingsModal')">×</button>
       <h3>Settings</h3>
       <button onclick="toggleNightMode()">Toggle Night Mode</button>
-      <p>Avatar: <input id="avatar" placeholder="Officer Avatar Name"></p>
-      <p>Patch: <input id="patch" placeholder="Department Patch Label"></p>
+      <input id="avatar" placeholder="Officer Avatar Name">
+      <input id="patch" placeholder="Patch/Unit Name">
+    </div>
+
+    <div class="modal" id="resourcesModal">
+      <button class="close-btn" onclick="hideModal('resourcesModal')">×</button>
+      <h3>Resources</h3>
+      <ul>
+        <li><a href="#" style="color: #90caf9;">10-Codes PDF</a></li>
+        <li><a href="#" style="color: #90caf9;">SOP Handbook</a></li>
+      </ul>
     </div>
     
-    <script>
+<script>
 let isSupervisor = false;
 let searchHistory = [];
-let incidentReports = [];
-let shiftStats = { calls: 0, ncic: 0, plates: 0, citations: 0 };
 
 function login() {
   const name = document.getElementById("officerName").value;
@@ -230,43 +225,41 @@ function toggleSidebar() {
 }
 
 function logout() {
-  generateShiftSummary();
-  setTimeout(() => location.reload(), 8000);
+  alert("Session Ended. All activity cleared.");
+  location.reload();
 }
 
-function saveNotepad() {
-  const text = document.getElementById("notepad").value;
-  localStorage.setItem("patrolNotes", text);
-  alert("Notes saved.");
+// MODALS
+function showModal(id) {
+  document.getElementById(id).style.display = "block";
+}
+function hideModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+function showCustomCall() {
+  showModal('customCallModal');
 }
 
-function clearNotepad() {
-  document.getElementById("notepad").value = "";
-  localStorage.removeItem("patrolNotes");
+// NIGHT MODE
+function toggleNightMode() {
+  document.body.style.background = document.body.style.background === "#1b1f23" ? "#000" : "#1b1f23";
 }
 
+// CALLS
 function generateCall() {
-  const titles = ["Suspicious Person", "DV Verbal", "Loud Disturbance", "Shoplifting", "Burglary"];
-  const locs = ["8321 Raytown Rd", "3201 NE 79th St", "104 Oakwood Dr", "2920 Bannister Rd"];
-  const rps = ["Amy Walker", "Kevin Diaz", "Security", "Caller Unknown"];
+  const titles = ["Burglary Alarm", "Suspicious Person", "Loud Music", "DV Call", "Welfare Check"];
+  const locs = ["123 Oak St", "4209 Ridgeview Dr", "1200 Main St", "802 Birch Ln", "2809 Liberty Ave"];
   const descs = [
-    "Male pacing outside yelling at no one.",
-    "Neighbors report yelling and objects breaking.",
-    "RP states unknown vehicle has parked and engine running for 30 mins.",
-    "Alarm triggered, motion detected in rear office.",
+    "Caller reports unknown person walking around front yard.",
+    "Alarm triggered from back door sensor.",
+    "Neighbor says yelling heard inside.",
+    "Welfare check requested by out-of-state relative.",
+    "Male pacing outside store, appears distressed."
   ];
+  const rps = ["Jane Foster", "Security Company", "Unknown", "Michael Thomas", "Witness"];
   const i = Math.floor(Math.random() * titles.length);
-  const priority = `Level ${Math.ceil(Math.random() * 3)}`;
-  const call = {
-    title: titles[i],
-    location: locs[i],
-    priority: priority,
-    rp: rps[i],
-    desc: descs[i] || "No further details."
-  };
-  shiftStats.calls++;
-  document.getElementById("currentCall").innerText =
-    `Title: ${call.title}\nLocation: ${call.location}\nPriority: ${call.priority}\nRP: ${call.rp}\nDescription: ${call.desc}`;
+  const out = `Title: ${titles[i]}\nLocation: ${locs[i]}\nPriority: Level ${Math.ceil(Math.random() * 3)}\nRP: ${rps[i]}\nDescription: ${descs[i]}`;
+  document.getElementById("currentCall").innerText = out;
 }
 
 function submitCustomCall() {
@@ -276,106 +269,86 @@ function submitCustomCall() {
   const rp = document.getElementById("callRP").value;
   const desc = document.getElementById("callDescription").value;
   if (!title || !loc || !pri || !rp || !desc) return alert("Fill all fields.");
-  shiftStats.calls++;
-  const output = `Title: ${title}\nLocation: ${loc}\nPriority: ${pri}\nRP: ${rp}\nDescription: ${desc}`;
-  document.getElementById("currentCall").innerText = output;
-  alert("Custom call submitted.");
+  const out = `Title: ${title}\nLocation: ${loc}\nPriority: ${pri}\nRP: ${rp}\nDescription: ${desc}`;
+  document.getElementById("currentCall").innerText = out;
+  hideModal('customCallModal');
 }
 
 function clearCall() {
-  const field = document.getElementById("currentCall");
-  if (field.innerText.includes("No active call")) return alert("No active call.");
-  const note = prompt("Enter disposition or clearance note:");
-  if (note) alert(`Call cleared: ${note}`);
-  field.innerText = "No active call.";
+  document.getElementById("currentCall").innerText = "No active call.";
 }
 
+// NCIC SEARCH
 function runNCIC() {
   const first = document.getElementById("ncicFirst").value;
   const last = document.getElementById("ncicLast").value;
   const dob = document.getElementById("ncicDOB").value;
   if (!first || !last || !dob) return alert("First, Last, and DOB required.");
-  shiftStats.ncic++;
-  const entry = `NCIC Search – ${first} ${last}, DOB: ${dob}`;
-  searchHistory.push(entry);
-  document.getElementById("ncicResult").innerText =
-    `Name: ${first} ${last}\nDOB: ${dob}\nDL Status: Active\nPriors: Traffic Stop, Warning\nNo Warrants.`;
+
+  const ssn = `${randomNum(3)}-${randomNum(2)}-${randomNum(4)}`;
+  const dl = `S${randomNum(3)}-${randomNum(4)}-${randomNum(4)}`;
+  const status = ["Active", "Suspended", "Revoked"][Math.floor(Math.random() * 3)];
+  const address = `${Math.floor(Math.random() * 9999)} E 69th St, Kansas City, MO`;
+
+  const priors = [
+    "- Trespassing (2021)",
+    "- Drug Possession (2022)",
+    "- DUI (2020)"
+  ];
+  const warrants = [
+    "- Warrant: Failure to Appear – Active",
+    "- Warrant: Assault 3rd – Expunged",
+    "- Warrant: Theft – Dismissed"
+  ];
+
+  document.getElementById("identityTab").innerText =
+    `Name: ${first} ${last}\nDOB: ${dob}\nSSN: ${ssn}\nDL#: ${dl}\nStatus: ${status}\nAddress: ${address}`;
+
+  document.getElementById("priorsTab").innerText = priors.join("\n");
+  document.getElementById("warrantsTab").innerText = warrants.join("\n");
+
+  showTab("identityTab");
+
+  const historyEntry = `NCIC Query – ${first} ${last}, ${dob}`;
+  searchHistory.push(historyEntry);
 }
 
+// TABS
+function showTab(tabId) {
+  const tabs = ["identityTab", "priorsTab", "warrantsTab"];
+  for (let tab of tabs) {
+    document.getElementById(tab).classList.add("hidden");
+  }
+  document.getElementById(tabId).classList.remove("hidden");
+}
+
+// VEHICLE / PLATE SEARCH
 function runPlateSearch() {
   const plate = document.getElementById("plateInput").value.trim();
-  if (!plate) return alert("Enter plate.");
-  shiftStats.plates++;
-  const entry = `Plate Search – ${plate}`;
-  searchHistory.push(entry);
-  const stolen = plate.toLowerCase().includes("stolen");
-  const out = stolen
-    ? `**FLAGGED: STOLEN**\nPlate: ${plate}\nVehicle: Black Dodge Charger\nRO: Nathan Fields\nReg: Expired`
-    : `Plate: ${plate}\nVehicle: Silver Camry\nRO: L. Sanchez\nReg: Active`;
-  document.getElementById("plateResult").innerText = out;
+  if (!plate) return alert("Enter a plate.");
+  const makes = ["Ford", "Chevy", "Dodge", "Toyota"];
+  const models = ["Explorer", "Tahoe", "Charger", "Camry"];
+  const vin = `1${randomChar()}${randomChar()}${randomChar()}${randomChar()}${randomNum(6)}${randomChar()}${randomNum(3)}`;
+
+  const output = `Plate: ${plate}\nMake: ${randItem(makes)}\nModel: ${randItem(models)}\nVIN: ${vin}\nRO: Marcus Green\nReg Status: Active`;
+  document.getElementById("plateResult").innerText = output;
+
+  searchHistory.push(`Plate Search – ${plate}`);
 }
 
-function showHistory() {
-  document.getElementById("searchHistoryLog").innerText = searchHistory.join("\n\n");
+// HELPERS
+function randomNum(length) {
+  let str = "";
+  for (let i = 0; i < length; i++) str += Math.floor(Math.random() * 10);
+  return str;
 }
-
-function submitIncidentReport() {
-  const num = document.getElementById("reportNum").value;
-  const subject = document.getElementById("reportSubject").value;
-  const narrative = document.getElementById("reportNarrative").value;
-  if (!num || !subject || !narrative) return alert("Fill all fields.");
-  const report = `Case #: ${num}\nSubject: ${subject}\nNarrative:\n${narrative}`;
-  incidentReports.push(report);
-  document.getElementById("reportLog").innerText = report;
+function randomChar() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return chars[Math.floor(Math.random() * chars.length)];
 }
-
-function loadScenario() {
-  const selected = document.getElementById("scenarioSelect").value;
-  const log = document.getElementById("scenarioLog");
-  if (selected === "edp") {
-    log.innerText = "RP states male yelling about demons near gas pumps.";
-  } else if (selected === "pursuit") {
-    log.innerText = "Units in pursuit, black SUV eastbound 435 from Stadium Dr.";
-  } else if (selected === "disturbance") {
-    log.innerText = "Caller reports large party, bottles being thrown.";
-  } else if (selected === "audit") {
-    log.innerText = "Individual filming outside precinct refusing to ID.";
-  } else {
-    log.innerText = "No scenario selected.";
-  }
-}
-
-function generateShiftSummary() {
-  const summary = `Shift Summary:\nCalls Handled: ${shiftStats.calls}\nNCIC Queries: ${shiftStats.ncic}\nPlates Run: ${shiftStats.plates}\nCitations: ${shiftStats.citations}`;
-  document.getElementById("summaryOutput").innerText = summary;
-}
-
-function quickNCIC() {
-  shiftStats.ncic++;
-  document.getElementById("quickOutput").innerText =
-    "NCIC HIT: John White, DL Revoked, Prior Arrests: Burglary, Resisting.";
-}
-
-function quickPlate() {
-  shiftStats.plates++;
-  document.getElementById("quickOutput").innerText =
-    "Plate HIT: STOLEN – Red Jeep Cherokee, last seen N. Oak Trafficway.";
-}
-
-function sendBroadcast(msg) {
-  document.getElementById("broadcastLog").innerText = msg;
-}
-
-function showPanel(id) {
-  document.getElementById("resourcesPanel").classList.add("hidden");
-  document.getElementById("settingsPanel").classList.add("hidden");
-  document.getElementById(id).classList.remove("hidden");
-}
-
-function toggleNightMode() {
-  document.body.style.background = document.body.style.background === "#1b1f23" ? "#000" : "#1b1f23";
+function randItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 </script>
-
 </body>
 </html>
