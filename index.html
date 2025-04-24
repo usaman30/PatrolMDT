@@ -290,22 +290,42 @@ function runNCIC() {
   const status = ["Active", "Suspended", "Revoked"][Math.floor(Math.random() * 3)];
   const address = `${Math.floor(Math.random() * 9999)} E 69th St, Kansas City, MO`;
 
-  const priors = [
-    "- Trespassing (2021)",
-    "- Drug Possession (2022)",
-    "- DUI (2020)"
+  const allPriors = [
+    "Theft 3rd Degree",
+    "Assault 2nd Degree",
+    "Burglary",
+    "Drug Possession",
+    "Felony FTA",
+    "Unlawful Use of Weapon",
+    "DUI – Prior Offense",
+    "Driving While Suspended",
+    "Criminal Mischief",
+    "Trespassing",
+    "Possession of Paraphernalia",
+    "Violation of Protection Order",
+    "Resisting Arrest"
   ];
-  const warrants = [
-    "- Warrant: Failure to Appear – Active",
-    "- Warrant: Assault 3rd – Expunged",
-    "- Warrant: Theft – Dismissed"
+  const allWarrants = [
+    { text: "Warrant: Theft – Active", status: "Active" },
+    { text: "Warrant: DV Assault – Dismissed", status: "Dismissed" },
+    { text: "Warrant: Drug Possession – Expunged", status: "Expunged" },
+    { text: "Warrant: FTA on Traffic – Active", status: "Active" },
+    { text: "Warrant: Trespassing – Expunged", status: "Expunged" }
   ];
+
+  // Random sample function
+  function getRandomItems(arr, count) {
+    let shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  const priors = getRandomItems(allPriors, Math.floor(Math.random() * 4) + 1);
+  const warrants = getRandomItems(allWarrants, Math.floor(Math.random() * 3) + 1);
 
   document.getElementById("identityTab").innerText =
     `Name: ${first} ${last}\nDOB: ${dob}\nSSN: ${ssn}\nDL#: ${dl}\nStatus: ${status}\nAddress: ${address}`;
-
   document.getElementById("priorsTab").innerText = priors.join("\n");
-  document.getElementById("warrantsTab").innerText = warrants.join("\n");
+  document.getElementById("warrantsTab").innerText = warrants.map(w => w.text).join("\n");
 
   showTab("identityTab");
 
